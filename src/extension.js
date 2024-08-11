@@ -4,15 +4,15 @@ const fs = require("fs");
 const path = require("path");
 
 /* ********** PATH ********** */
-const CONFIG_PATH = path.resolve(__dirname, "./config.js");
+let configPath = "";
 
 /* ********** SNIPPETS ********** */
-let { snippets: clientSnippets } = require(CONFIG_PATH);
+let clientSnippets = [];
 
 /* ********** LAST CONFIG UPDATE ********** */
 let lastConfigUpdate = undefined;
 const reloadSnippetsIfUpdated = () => {
-    const stats = fs.statSync(CONFIG_PATH);
+    const stats = fs.statSync(configPath);
 
     // File has not been updated
     if (lastConfigUpdate && stats.mtime <= lastConfigUpdate) return;
@@ -21,14 +21,14 @@ const reloadSnippetsIfUpdated = () => {
     lastConfigUpdate = stats.mtime;
 
     // Reload the snippets
-    delete require.cache[require.resolve(CONFIG_PATH)];
-    clientSnippets = require(CONFIG_PATH).snippets;
+    delete require.cache[require.resolve(configPath)];
+    clientSnippets = require(configPath).snippets;
 };
 
 /* ********** CONFIG ********** */
 const config = vscode.commands.registerCommand("snippetpulse.config", () => {
     // Open in a tab the config file
-    vscode.workspace.openTextDocument(CONFIG_PATH).then((doc) => {
+    vscode.workspace.openTextDocument(configPath).then((doc) => {
         vscode.window.showTextDocument(doc);
     });
 });
@@ -121,6 +121,19 @@ const insert = vscode.commands.registerCommand("snippetpulse.insert", async () =
 
 /* ********** ACTIVATE ********** */
 function activate(context) {
+    // Set the config path
+    configPath = context.extensionPath + "/src/config.js";
+
+    // Create the config file if it does not exist
+    if (!fs.existsSync(configPath)) {
+        fs.mkdirSync(path.dirname(configPath), { recursive: true });
+        fs.writeFileSync(configPath, "const snippets = [];\n\nmodule.exports = { snippets };\n");
+    }
+
+    // Load snippets
+    clientSnippets = require(configPath).snippets;
+
+    // Register commands
     context.subscriptions.push(config, insert);
 }
 
