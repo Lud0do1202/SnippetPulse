@@ -66,7 +66,7 @@ const snippets = [
             },
         ],
         tranform: (model_name, views_type) => viewsBody(model_name, views_type),
-        regex: /\\.xml$/,
+        regex: /(\.xml)$/,
     },
     {
         name: "odoo-action",
@@ -86,18 +86,22 @@ const snippets = [
             },
         ],
         tranform: (model_name, views_type) => actionBody(model_name, views_type),
-        regex: /\\.xml$/,
+        regex: /(\.xml)$/,
     },
     {
         name: "odoo-model",
         tranform: () => ["class TestPython"],
-        regex: /\\.py$/,
+        regex: /(\.py)$/,
     },
     {
         name: "odoo-in-dev",
         tranform: () => ["In dev"],
-        regex: /(\\.py$)|(\\.json$)/,
+        regex: /((\.py)|(\.json))$/,
         active: false,
+    },
+    {
+        name: "global",
+        tranform: () => ["GLOBAL"],
     },
 ];
 
