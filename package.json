@@ -1,8 +1,8 @@
 {
     "name": "snippetpulse",
     "displayName": "Snippet Pulse",
-    "description": "",
-    "version": "0.0.1",
+    "description": "Stay in sync with the pulse of your code snippets and enhance productivity",
+    "version": "1.0.0",
     "engines": {
         "vscode": "^1.92.0"
     },
@@ -14,8 +14,12 @@
     "contributes": {
         "commands": [
             {
-                "command": "snippetpulse.helloWorld",
-                "title": "Hello World"
+                "command": "snippetpulse.config",
+                "title": "SnippetPulse > CONFIG"
+            },
+            {
+                "command": "snippetpulse.insert",
+                "title": "SnippetPulse > INSERT"
             }
         ]
     },
