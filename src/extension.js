@@ -7,112 +7,162 @@ const path = require("path");
 let configPath = "";
 
 /* ********** LOAD SNIPPETS ********** */
+let clientSnippets = undefined;
 let lastConfigUpdate = undefined;
 const loadSnippets = () => {
     const stats = fs.statSync(configPath);
 
     // File has not been updated
-    if (lastConfigUpdate && stats.mtime <= lastConfigUpdate) return;
+    if (clientSnippets && lastConfigUpdate && stats.mtime <= lastConfigUpdate) return clientSnippets;
 
     // Update the last modified time
     lastConfigUpdate = stats.mtime;
 
     // Reload the snippets
     delete require.cache[require.resolve(configPath)];
-    const clientSnippets = require(configPath).snippets;
+    clientSnippets = require(configPath).snippets;
 
     // Check snippets
     const checkSnippets = () => {
-        // Check if snippets is defined
+        // Snippets variable is not defined
         if (!clientSnippets) {
-            throw new Error("Invalid snippets found. Snippets must be defined.");
+            throw new Error("snippets variable is not defined");
         }
 
-        // Check if snippets is an array
+        // Snippets variable is not an array
         if (!Array.isArray(clientSnippets)) {
-            throw new Error("Invalid snippets found. Snippets must be an array.");
+            throw new Error("snippets variable must be an array");
         }
 
-        clientSnippets.forEach((snippet) => {
-            // Check if snippet is an object
+        clientSnippets.forEach((snippet, iSnippet) => {
+            // Snippet is not an object
             if (typeof snippet !== "object") {
-                throw new Error("Invalid snippet found. Snippets must be objects.");
+                throw new Error(`snippet[${iSnippet}] must be an object`);
             }
 
-            // Check if snippet has a name
-            if (!snippet.name || snippet.name.trim().length === 0 || typeof snippet.name !== "string") {
-                throw new Error("Invalid snippet found. Snippets must have a name.");
+            // Snippet.name is missing
+            if (!snippet.name) {
+                throw new Error(`snippet[${iSnippet}].name is missing`);
             }
 
-            // Check if snippet has a transform function
-            if (!snippet.transform || typeof snippet.transform !== "function") {
-                throw new Error(`Snippet '${snippet.name}' does not have a transform function.`);
+            // Snippet.name is not a string
+            if (typeof snippet.name !== "string") {
+                throw new Error(`snippet['${snippet.name}'].name must be of type (string)`);
             }
 
-            // Check if snippet has a regex
+            // Snippet.name is missing
+            if (snippet.name.trim().length === 0) {
+                throw new Error(`snippet[${iSnippet}].name is missing`);
+            }
+
+            // Snippet.transform is missing
+            if (!snippet.transform) {
+                throw new Error(`snippet['${snippet.name}'].transform is missing`);
+            }
+
+            // Snippet.transform is not a function
+            if (typeof snippet.transform !== "function") {
+                throw new Error(`snippet['${snippet.name}'].transform must be of type (function)`);
+            }
+
+            // Snippet.regex? is not a RegExp
             if (snippet.regex && !(snippet.regex instanceof RegExp)) {
-                throw new Error(`Snippet '${snippet.name}' has an invalid regex. Must be of type RegExp.`);
+                throw new Error(
+                    `snippet['${snippet.name}'].regex must be of type (RegExp | undefined = undefined --> global)`
+                );
             }
 
-            // Check active
+            // Snippet.active? is not a boolean
             if (snippet.active && typeof snippet.active !== "boolean") {
-                throw new Error(`Snippet '${snippet.name}' has an invalid active. Must be a boolean.`);
+                throw new Error(`snippet['${snippet.name}'].active must be of type (boolean | undefined = true)`);
             }
 
             // Check args
             if (snippet.args) {
-                // Check if args is an array
+                // Snippet.args is not an array
                 if (!Array.isArray(snippet.args)) {
-                    throw new Error(`Snippet '${snippet.name}' has invalid args. Must be an array.`);
+                    throw new Error(`snippet['${snippet.name}'].args must be an array`);
                 }
 
-                snippet.args.forEach((arg) => {
-                    // Check if arg is an object
+                snippet.args.forEach((arg, iArgs) => {
+                    // Snippet.arg is not an object
                     if (typeof arg !== "object") {
-                        throw new Error(`Snippet '${snippet.name}' has an invalid arg. Must be an object.`);
+                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}] must be an object`);
                     }
 
-                    // Check if arg has a name
-                    if (!arg.name || arg.name.trim().length === 0 || typeof arg.name !== "string") {
-                        throw new Error(`Snippet '${snippet.name}' has an arg without a name.`);
+                    // Snippet.arg.name is missing
+                    if (!arg.name) {
+                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}].name is missing`);
+                    }
+
+                    // Snippet.arg.name is missing
+                    if (typeof arg.name !== "string") {
+                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}].name must be of type (string)`);
+                    }
+
+                    // Snippet.arg.name is missing
+                    if (arg.name.trim().length === 0) {
+                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}].name is missing`);
                     }
 
                     // Check selection
                     if (arg.selection) {
-                        // Check if selection is an object
+                        // Snippet.arg.selection is not an object
                         if (typeof arg.selection !== "object") {
+                            throw new Error(`snippet['${snippet.name}'].args[${arg.name}].selection must be an object`);
+                        }
+
+                        // Can pick many is not a boolean
+                        if (arg.selection.canPickMany !== undefined && typeof arg.selection.canPickMany !== "boolean") {
                             throw new Error(
-                                `Snippet '${snippet.name}.' has an invalid selection in argument '${arg.name}'. Must be an object.`
+                                `snippet['${snippet.name}'].args[${arg.name}].selection.canPickMany must be of type (boolean | undefined = false)`
                             );
                         }
 
-                        // Check values exist
-                        if (!arg.selection.values) {
+                        // Snippet.arg.selection.options is missing
+                        if (!arg.selection.options) {
                             throw new Error(
-                                `Snippet '${snippet.name}.' has an invalid selection in argument '${arg.name}'. Must have values.`
+                                `snippet['${snippet.name}'].args[${arg.name}].selection.options is missing`
                             );
                         }
 
-                        // Check values is an array
-                        if (!Array.isArray(arg.selection.values)) {
+                        // Snippet.arg.selection.options is not an array
+                        if (!Array.isArray(arg.selection.options)) {
                             throw new Error(
-                                `Snippet '${snippet.name}.' has an invalid selection in argument '${arg.name}'. Values must be an array.`
+                                `snippet['${snippet.name}'].args[${arg.name}].selection.options must be an array`
                             );
                         }
 
-                        // Check values are strings
-                        if (arg.selection.values.some((value) => typeof value !== "string")) {
-                            throw new Error(
-                                `Snippet '${snippet.name}.' has an invalid selection in argument '${arg.name}'. Values must be strings.`
-                            );
-                        }
+                        // Check options
+                        arg.selection.options.forEach((option, iOption) => {
+                            // Snippet.arg.selection.option is not a tuple
+                            if (!Array.isArray(option) || option.length !== 2) {
+                                throw new Error(
+                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}] must be a tuple of 2 elements`
+                                );
+                            }
 
-                        // Check canPickMany
-                        if (arg.selection.canPickMany && typeof arg.selection.canPickMany !== "boolean") {
-                            throw new Error(
-                                `Snippet '${snippet.name}.' has an invalid selection in argument '${arg.name}'. canPickMany must be a boolean.`
-                            );
-                        }
+                            // Lable missing
+                            if (!option[0]) {
+                                throw new Error(
+                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}][0 --> label] is missing`
+                                );
+                            }
+
+                            // Label not a string
+                            if (typeof option[0] !== "string") {
+                                throw new Error(
+                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}][0 --> label] must be of type (string)`
+                                );
+                            }
+
+                            // Lable missing
+                            if (option[0].trim().length === 0) {
+                                throw new Error(
+                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}][0 --> label] is missing`
+                                );
+                            }
+                        });
                     }
                 });
             }
@@ -189,27 +239,49 @@ const insert = vscode.commands.registerCommand("snippetpulse.insert", async () =
         // Ask for arguments
         const args = [];
         for (const arg of snippet.args || []) {
-            const value = arg.selection
-                ? // Selection
-                  await vscode.window.showQuickPick(arg.selection.values, {
-                      title: arg.name,
-                      placeHolder: arg.placeholder,
-                      canPickMany: arg.selection.canPickMany,
-                  })
-                : // Input
-                  await vscode.window.showInputBox({
-                      title: arg.name,
-                      placeHolder: arg.placeholder,
-                      prompt: arg.prompt,
-                  });
+            // Selection
+            if (arg.selection) {
+                // Get the labels
+                const labels = arg.selection.options.map((option) => option[0]);
 
-            // No value provided --> Cancelled
-            if (!value) {
-                return;
+                // Show the quick pick
+                const labelsSelected = await vscode.window.showQuickPick(labels, {
+                    title: arg.name,
+                    placeHolder: arg.placeholder,
+                    canPickMany: arg.selection.canPickMany,
+                });
+
+                // Cancelled
+                if (!labelsSelected) {
+                    return;
+                }
+
+                // Get the values
+                const value = arg.selection.options
+                    .filter((option) => labelsSelected.includes(option[0]))
+                    .map((option) => option[1]);
+
+                // Push the value
+                args.push(value);
             }
 
-            // Add the value to the arguments
-            args.push(value);
+            // Input
+            else {
+                // Show the input box
+                const value = await vscode.window.showInputBox({
+                    title: arg.name,
+                    placeHolder: arg.placeholder,
+                    prompt: arg.prompt,
+                });
+
+                // Cancelled
+                if (!value) {
+                    return;
+                }
+
+                // Push the value
+                args.push(value);
+            }
         }
 
         // Generate snippet body using the collected arguments

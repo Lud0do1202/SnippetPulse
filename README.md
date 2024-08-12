@@ -32,7 +32,7 @@ const snippets = [
             placeholder?: string;
             prompt?: string;
             selection?: {
-                values: string[];
+                options: [string, any][];
                 canPickMany: boolean = false;
             }
         }[] = [];
@@ -51,7 +51,7 @@ const snippets = [
 | **args.placeholder**           | string \| undefined | undefined            | The placeholder providing a hint or example of the expected input.                                                                                                 |
 | **args.prompt**                | string \| undefined | undefined            | The message displayed to help the user understand what input is required.                                                                                          |
 | **args.selection**             | object \| undefined | undefined            | If the argument involves selecting from a list of predefined options, this object specifies those choices.                                                         |
-| **args.selection.values**      | string[]            | required             | The possible options that a user can select from.                                                                                                                  |
+| **args.selection.options**     | [string, any][]     | required             | The possible options that a user can select with the lable first and the value                                                                                     |
 | **args.selection.canPickMany** | boolean             | false                | Determines whether the user can select multiple options or just one.                                                                                               |
 | **transform**                  | function            | _required_           | The function that will return the final snippet. Each element of the returned array will be inserted as a line.                                                    |
 | **regex**                      | RegExp \| undefined | undefined --> global | A regular expression that will check if the absolute path of the file selected by the user matches the pattern. If it does, the snippet will be available for use. |
@@ -74,12 +74,17 @@ const snippets = [
                 name: "Separator",
                 prompt: "Select the separator you want to use",
                 selection: {
-                    values: ["_", "-", ".", " "],
+                    options: [
+                        ["underscore (_)", "_"],
+                        ["dash (-)", "-"],
+                        ["dot (.)", "."],
+                        ["empty space ( )", " "],
+                    ],
                     canPickMany: false,
                 },
             },
         ],
-        tranform: (text, separator) => [text.replace(/[\\. _-]/g, separator)],
+        transform: (text, separator) => [text.replace(/[\\. _-]/g, separator)],
     },
 
     // Initialize a JSON file from the /dev folder with several available options.
@@ -90,16 +95,20 @@ const snippets = [
                 name: "Options",
                 prompt: "Select the options you want to include",
                 selection: {
-                    values: ["name", "age", "city"],
+                    options: [
+                        ["Name", ["name", "John Doe"]],
+                        ["Age", ["age", 30]],
+                        ["Email", ["email", "john.doe@gmail.com"]],
+                    ],
                     canPickMany: true,
                 },
             },
         ],
-        tranform: (options) => {
+        transform: (options) => {
             let body = [];
             body.push("{");
             options.forEach((option) => {
-                body.push(`    "${option}": "",`);
+                body.push(`    "${option[0]}": "${option[1]}",`);
             });
             body.push("}");
             return body;
