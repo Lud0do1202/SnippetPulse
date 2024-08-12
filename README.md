@@ -1,65 +1,121 @@
-# snippetpulse README
+# Snippet Pulse
 
-This is the README for your extension "snippetpulse". After writing up a brief description, we recommend including the following sections.
+Stay in sync with the pulse of your code snippets and enhance productivity
 
-## Features
+## Desciption
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+**_SnippetPulse_** is a powerful tool designed to simplify the creation and insertion of code **snippets** by defining them through **JavaScript functions**.
 
-For example if there is an image subfolder under your extension project workspace:
+It allows you to define snippets with **customizable arguments**, transforming them dynamically based on user input, and integrating them seamlessly into your workflow.
 
-\!\[feature X\]\(images/feature-x.png\)
+## Commands
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Config
 
-## Requirements
+The SnippetPulse configuration can be accessed through the following command:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+```json
+{
+    "command": "snippetpulse.config",
+    "title": "SnippetPulse > CONFIG"
+}
+```
 
-## Extension Settings
+#### Schema
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+```ts
+const snippets = [
+    {
+        name: string;
+        args: {
+            name: string;
+            placeholder?: string;
+            prompt?: string;
+            selection?: {
+                values: string[];
+                canPickMany: boolean = false;
+            }
+        }[] = [];
+        transform: (...args: any) => string[];
+        regex: RegExp = global_snippet;
+        active: boolean = true;
+    }
+];
+```
 
-For example:
+| Name                           | Type                | Default              | Explanation                                                                                                                                                        |
+| ------------------------------ | ------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **name**                       | string              | _required_           | The name displayed in the snippet suggestions list.                                                                                                                |
+| **args**                       | array[]             | [ ]                  | The definition of all the arguments required for the snippet.                                                                                                      |
+| **args.name**                  | string              | _required_           | The name displayed as the title of the argument input field.                                                                                                       |
+| **args.placeholder**           | string \| undefined | undefined            | The placeholder providing a hint or example of the expected input.                                                                                                 |
+| **args.prompt**                | string \| undefined | undefined            | The message displayed to help the user understand what input is required.                                                                                          |
+| **args.selection**             | object \| undefined | undefined            | If the argument involves selecting from a list of predefined options, this object specifies those choices.                                                         |
+| **args.selection.values**      | string[]            | required             | The possible options that a user can select from.                                                                                                                  |
+| **args.selection.canPickMany** | boolean             | false                | Determines whether the user can select multiple options or just one.                                                                                               |
+| **transform**                  | function            | _required_           | The function that will return the final snippet. Each element of the returned array will be inserted as a line.                                                    |
+| **regex**                      | RegExp \| undefined | undefined --> global | A regular expression that will check if the absolute path of the file selected by the user matches the pattern. If it does, the snippet will be available for use. |
+| **active**                     | boolean             | true                 | A boolean that determines whether the snippet is available for use.                                                                                                |
 
-This extension contributes the following settings:
+#### Example
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+```js
+const snippets = [
+    // Global snippet that replaces all separators in a text with one of the options
+    {
+        name: "replace-separators",
+        args: [
+            {
+                name: "Text",
+                placeholder: "word1 word2-word3.word4_word5",
+                prompt: "Enter the text (separators= . _-)",
+            },
+            {
+                name: "Separator",
+                prompt: "Select the separator you want to use",
+                selection: {
+                    values: ["_", "-", ".", " "],
+                    canPickMany: false,
+                },
+            },
+        ],
+        tranform: (text, separator) => [text.replace(/[\\. _-]/g, separator)],
+    },
 
-## Known Issues
+    // Initialize a JSON file from the /dev folder with several available options.
+    {
+        name: "json-init",
+        args: [
+            {
+                name: "Options",
+                prompt: "Select the options you want to include",
+                selection: {
+                    values: ["name", "age", "city"],
+                    canPickMany: true,
+                },
+            },
+        ],
+        tranform: (options) => {
+            let body = [];
+            body.push("{");
+            options.forEach((option) => {
+                body.push(`    "${option}": "",`);
+            });
+            body.push("}");
+            return body;
+        },
+        regex: /\/dev\/.*(\.json)$/,
+    },
+];
+```
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+### Insert
 
-## Release Notes
+The SnippetPulse insertion can be accessed through the following command:
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+```json
+{
+    "command": "snippetpulse.insert",
+    "title": "SnippetPulse > INSERT"
+}
+```

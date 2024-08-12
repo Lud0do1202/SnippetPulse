@@ -48,60 +48,50 @@ const actionBody = (model, views) => {
 };
 
 const snippets = [
+    // Global snippet that replaces all separators in a text with one of the options
     {
-        name: "odoo-view",
+        name: "replace-separators",
         args: [
             {
-                name: "model_name",
-                placeholder: "res.users",
-                prompt: "Enter the model name (separators= . _-)",
+                name: "Text",
+                placeholder: "word1 word2-word3.word4_word5",
+                prompt: "Enter the text (separators= . _-)",
             },
             {
-                name: "views_type",
-                prompt: "Select all the views you want to create",
+                name: "Separator",
+                prompt: "Select the separator you want to use",
                 selection: {
-                    values: ["form", "tree", "kanban", "search"],
+                    values: ["_", "-", ".", " "],
+                    canPickMany: false,
+                },
+            },
+        ],
+        transform: (text, separator) => [text.replace(/[\\. _-]/g, separator)],
+    },
+
+    // Initialize a JSON file from the /dev folder with several available options.
+    {
+        name: "json-init",
+        args: [
+            {
+                name: "Options",
+                prompt: "Select the options you want to include",
+                selection: {
+                    values: ["name", "age", "city"],
                     canPickMany: true,
                 },
             },
         ],
-        tranform: (model_name, views_type) => viewsBody(model_name, views_type),
-        regex: /(\.xml)$/,
-    },
-    {
-        name: "odoo-action",
-        args: [
-            {
-                name: "model_name",
-                placeholder: "res.users",
-                prompt: "Enter the model name (separators= . _-)",
-            },
-            {
-                name: "views_type",
-                prompt: "Select all the views you want to create",
-                selection: {
-                    values: ["form", "tree", "kanban", "search"],
-                    canPickMany: true,
-                },
-            },
-        ],
-        tranform: (model_name, views_type) => actionBody(model_name, views_type),
-        regex: /(\.xml)$/,
-    },
-    {
-        name: "odoo-model",
-        tranform: () => ["class TestPython"],
-        regex: /(\.py)$/,
-    },
-    {
-        name: "odoo-in-dev",
-        tranform: () => ["In dev"],
-        regex: /((\.py)|(\.json))$/,
-        active: false,
-    },
-    {
-        name: "global",
-        tranform: () => ["GLOBAL"],
+        transform: (options) => {
+            let body = [];
+            body.push("{");
+            options.forEach((option) => {
+                body.push(`    "${option}": "",`);
+            });
+            body.push("}");
+            return body;
+        },
+        regex: /\/dev\/.*(\.json)$/,
     },
 ];
 
