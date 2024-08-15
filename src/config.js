@@ -104,6 +104,64 @@ const snippets = [
             return body;
         },
     },
+    {
+        name: "replace-separators",
+        transform: ({ text, newSeparator }) => {
+            return [text.replace(/[\._ -]/g, newSeparator)];
+        },
+        args: [
+            {
+                name: "text",
+                type: "input",
+                prompt: "Enter the text to replace the separators",
+                placeholder: "H-E_L L.O",
+            },
+            {
+                name: "newSeparator",
+                type: "selection",
+                prompt: "Enter the new separator",
+                selection: {
+                    options: [
+                        ["Space", " "],
+                        ["Hyphen", "-"],
+                        ["Underscore", "_"],
+                        ["Dot", "."],
+                    ],
+                    canPickMany: false,
+                },
+            },
+        ],
+    },
+    {
+        name: "perf-function",
+        transform: ({ functionName, argNames }) => {
+            let body = [];
+            body.push("// --------------------------------- //");
+            body.push(`let t1 = new Date().getTime()`);
+            body.push(`console.log(\`Start ${functionName}: \${t1 }\`)`);
+            body.push(`console.log(${functionName}(${argNames}))`);
+            body.push(`let t2 = new Date().getTime()`);
+            body.push(`console.log(\`End ${functionName}: \${t2 }\`)`);
+            body.push(`console.log(\`Execution time ${functionName}: \${t2 - t1} ms\`)`);
+            body.push("// --------------------------------- //");
+
+            return body;
+        },
+        args: [
+            {
+                name: "functionName",
+                type: "input",
+                prompt: "Enter the function name",
+                placeholder: "myFunction",
+            },
+            {
+                name: "argNames",
+                type: "input",
+                prompt: "Enter the arguments names",
+                placeholder: "arg1, arg2",
+            },
+        ],
+    },
 ];
 
 module.exports = { snippets };

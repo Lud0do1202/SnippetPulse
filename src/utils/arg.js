@@ -1,10 +1,10 @@
 const askArguments = async (args, prefixTitle, vscode) => {
     const values = {};
 
-    for (const arg of args) {
+    for (const arg of args || []) {
         const value = await askArgument(arg, prefixTitle, vscode);
 
-        if (!value) {
+        if (value === undefined) {
             return;
         }
 
@@ -47,7 +47,7 @@ const askSelectionArgument = async (arg, prefixTitle, vscode) => {
     });
 
     // Cancelled
-    if (!labelsSelected) {
+    if (labelsSelected === undefined) {
         return;
     }
 
@@ -64,26 +64,26 @@ const askInfiniteArgument = async (arg, prefixTitle, vscode) => {
 
     let index = 0;
     while (true) {
+        // Ask if the user wants to add another argument
+        const addAnother = await vscode.window.showQuickPick(["Yes", "No"], {
+            title: arg.name,
+            placeHolder: "Add a new argument?",
+        });
+
+        if (addAnother === "No") {
+            break;
+        }
+
         // Ask for the arguments
         const args = await askArguments(arg.subargs, `${prefixTitle}.${arg.name}[${index}]`, vscode);
 
         // Cancelled
-        if (!args) {
+        if (args === undefined) {
             return;
         }
 
         // Add the arguments
         infiniteArgs.push(args);
-
-        // Ask if the user wants to add another argument
-        const addAnother = await vscode.window.showQuickPick(["Yes", "No"], {
-            title: arg.name,
-            placeHolder: "Add another?",
-        });
-
-        if (addAnother !== "Yes") {
-            break;
-        }
 
         index++;
     }
