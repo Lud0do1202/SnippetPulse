@@ -15,7 +15,6 @@ const snippets = [
                     ],
                     canPickMany: true,
                 },
-                placeholder: "JSON",
                 prompt: "Select the type of files you want to generate",
             },
             {
