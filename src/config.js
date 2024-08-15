@@ -1,57 +1,109 @@
 const snippets = [
-    // Global snippet that replaces all separators in a text with one of the options
     {
-        name: "replace-separators",
-        args: [
-            {
-                name: "Text",
-                placeholder: "word1 word2-word3.word4_word5",
-                prompt: "Enter the text (separators= . _-)",
-            },
-            {
-                name: "Separator",
-                prompt: "Select the separator you want to use",
-                selection: {
-                    options: [
-                        ["underscore (_)", "_"],
-                        ["dash (-)", "-"],
-                        ["dot (.)", "."],
-                        ["empty space ( )", " "],
-                    ],
-                    canPickMany: false,
-                },
-            },
-        ],
-        transform: (text, separator) => [text.replace(/[\\. _-]/g, separator)],
-    },
+        name: "data-format",
+        transform: ({ typeFiles, root, attributes }) => {
+            // Convert attributes to a JSON string (minified or not)
+            const toJsonString = (attrs, minimal) => {
+                let data = { [root]: {} };
 
-    // Initialize a JSON file from the /dev folder with several available options.
-    {
-        name: "json-init",
+                for (const attr of attrs) {
+                    data[root][attr.attribute] =
+                        attr.type === "number"
+                            ? Number(attr.value)
+                            : attr.type === "array"
+                            ? attr.value.trim().split(",")
+                            : attr.value;
+                }
+
+                return JSON.stringify(data, null, minimal ? 0 : 2);
+            };
+
+            // Convert attributes to an XML string (minified or not)
+            const toXmlString = (attrs, minimal) => {
+                const nextLine = minimal ? "" : "\n";
+                const nextLineAndTab = minimal ? "" : "\n\t";
+
+                let data = `<${root}>`;
+                for (const attribute of attrs) {
+                    if (attribute.type === "array") {
+                        const values = attribute.value.trim().split(",");
+                        for (const value of values) {
+                            data += `${nextLineAndTab}<${attribute.attribute}>${value}</${attribute.attribute}>`;
+                        }
+                    } else {
+                        data += `${nextLineAndTab}<${attribute.attribute}>${
+                            attribute.type === "number" ? Number(attribute.value) : attribute.value
+                        }</${attribute.attribute}>`;
+                    }
+                }
+                data += `${nextLine}</${root}>`;
+                return data;
+            };
+
+            // Generate the body for each type of file
+            let body = [];
+            for (const typeFile of typeFiles) {
+                if (typeFile.type === "json") {
+                    const jsonBody = toJsonString(attributes, typeFile.minimal);
+                    body.push(jsonBody, "");
+                } else if (typeFile.type === "xml") {
+                    const xmlBody = toXmlString(attributes, typeFile.minimal);
+                    body.push(xmlBody, "");
+                }
+            }
+            return body;
+        },
         args: [
             {
-                name: "Options",
-                prompt: "Select the options you want to include",
+                name: "typeFiles",
+                type: "selection",
                 selection: {
                     options: [
-                        ["Name", ["name", "John Doe"]],
-                        ["Age", ["age", 30]],
-                        ["Email", ["email", "john.doe@gmail.com"]],
+                        ["JSON", { type: "json", minimal: false }],
+                        ["Minimal JSON", { type: "json", minimal: true }],
+                        ["XML", { type: "xml", minimal: false }],
+                        ["Minimal XML", { type: "xml", minimal: true }],
                     ],
                     canPickMany: true,
                 },
+                prompt: "Select the type of files you want to generate",
+            },
+            {
+                name: "root",
+                type: "input",
+                prompt: "Enter the root element name",
+                placeholder: "data",
+            },
+            {
+                name: "attributes",
+                type: "infinte",
+                subargs: [
+                    {
+                        name: "attribute",
+                        type: "input",
+                        prompt: "Enter the attribute name",
+                    },
+                    {
+                        name: "value",
+                        type: "input",
+                        prompt: "Enter the attribute value",
+                    },
+                    {
+                        name: "type",
+                        type: "selection",
+                        selection: {
+                            options: [
+                                ["String", "string"],
+                                ["Number", "number"],
+                                ["Array", "array"],
+                            ],
+                            canPickMany: false,
+                        },
+                        prompt: "Type of the attribute",
+                    },
+                ],
             },
         ],
-        transform: (options) => {
-            let body = [];
-            body.push("{");
-            options.forEach((option) => {
-                body.push(`    "${option[0]}": "${option[1]}",`);
-            });
-            body.push("}");
-            return body;
-        },
-        regex: /\/dev\/.*(\.json)$/,
     },
 ];
 

@@ -2,6 +2,7 @@
 const vscode = require("vscode");
 const fs = require("fs");
 const path = require("path");
+const { askArguments } = require("./utils/arg");
 
 /* ********** PATH ********** */
 let configPath = "";
@@ -237,55 +238,10 @@ const insert = vscode.commands.registerCommand("snippetpulse.insert", async () =
         }
 
         // Ask for arguments
-        const args = [];
-        for (const arg of snippet.args || []) {
-            // Selection
-            if (arg.selection) {
-                // Get the labels
-                const labels = arg.selection.options.map((option) => option[0]);
-
-                // Show the quick pick
-                const labelsSelected = await vscode.window.showQuickPick(labels, {
-                    title: arg.name,
-                    placeHolder: arg.placeholder,
-                    canPickMany: arg.selection.canPickMany,
-                });
-
-                // Cancelled
-                if (!labelsSelected) {
-                    return;
-                }
-
-                // Get the values
-                const value = arg.selection.options
-                    .filter((option) => labelsSelected.includes(option[0]))
-                    .map((option) => option[1]);
-
-                // Push the value
-                args.push(value);
-            }
-
-            // Input
-            else {
-                // Show the input box
-                const value = await vscode.window.showInputBox({
-                    title: arg.name,
-                    placeHolder: arg.placeholder,
-                    prompt: arg.prompt,
-                });
-
-                // Cancelled
-                if (!value) {
-                    return;
-                }
-
-                // Push the value
-                args.push(value);
-            }
-        }
+        const args = await askArguments(snippet.args, "args", vscode);
 
         // Generate snippet body using the collected arguments
-        const body = snippet.transform(...args);
+        const body = snippet.transform(args);
         editor.insertSnippet(new vscode.SnippetString(body.join("\n")));
     } catch (error) {
         vscode.window.showErrorMessage(error.message);
