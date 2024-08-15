@@ -134,6 +134,7 @@ const snippets = [
     },
     {
         name: "perf-function",
+        regex: /((\.js)$)|((\.ts)$)/,
         transform: ({ functionName, argNames }) => {
             let body = [];
             body.push("// --------------------------------- //");
