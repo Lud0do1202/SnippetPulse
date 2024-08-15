@@ -2,14 +2,35 @@
     "name": "snippetpulse",
     "displayName": "Snippet Pulse",
     "description": "Stay in sync with the pulse of your code snippets and enhance productivity",
+    "publisher": "Lud0do1202",
     "version": "1.0.0",
+    "author": {
+        "name": "Lud0do1202"
+    },
+    "icon": "./images/icon.png",
+    "keywords": [
+        "snippet",
+        "pulse",
+        "code",
+        "enhance",
+        "productivity"
+    ],
+    "categories": [
+        "Snippets",
+        "Programming Languages"
+    ],
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Lud0do1202/SnippetPulse"
+    },
     "engines": {
         "vscode": "^1.92.0"
     },
-    "categories": [
-        "Other"
+    "activationEvents": [
+        "onCommand:snippetpulse.config",
+        "onCommand:snippetpulse.insert"
     ],
-    "activationEvents": [],
     "main": "./src/extension.js",
     "contributes": {
         "commands": [
