@@ -198,3 +198,6 @@ The SnippetPulse insertion can be accessed through the following command:
 ### Example
 
 The following video shows how to insert a snippet using the configuration defined above:
+
+https://github.com/user-attachments/assets/1f9c00f8-6bf2-4aee-981b-e4b2dd5a8078
+
