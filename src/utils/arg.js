@@ -12,84 +12,6 @@ const askArguments = async (args, prefixTitle, vscode) => {
     }
 
     return values;
-
-    /*
-        snippets = [
-            {
-                name: "data",
-                args: [
-                    {
-                        name: "typeFile",
-                        type: "selection",
-                        selection: {
-                            options: [
-                                ["JSON", { type: "json", minimal: false }],
-                                ["Minimal JSON", { type: "json", minimal: true }],
-                                ["XML", { type: "xml", minimal: false }],
-                                ["Minimal XML", { type: "xml", minimal: true }]
-                            ],
-                            canPickMany: true
-                        }
-                    },
-                    {
-                        name: "root",
-                        type: "input"
-                    },
-                    {
-                        name: "attributes",
-                        type: "infinite",
-                        subargs: [
-                            {
-                                name: "attribute",
-                                type: "input"
-                            },
-                            {
-                                name: "value",
-                                type: "input"
-                            },
-                            {
-                                name: "type",
-                                type: "selection",
-                                selection: {
-                                    options: [
-                                        ["String", "string"],
-                                        ["Number", "number"],
-                                    ],
-                                    canPickMany: false
-                                }
-                            }
-                        ]
-                    }
-                ],
-            }
-        ]
-
-
-        args = {
-            "typeFile": [                           --> Selection
-                { type: "json", minimal: false }, 
-                { type: "xml", minimal: true }
-            ],        
-            "root": "Client Root",                  --> Input
-            "attributes": [                         --> Infinite
-                {
-                    "attribute": "name",                --> Input
-                    "value": "John Doe"                 --> Input
-                    "type": "string"                    --> Selection
-                },
-                {
-                    "attribute": "age",
-                    "value": "30",
-                    "type": "number"
-                },
-                {
-                    "attribute": "email",
-                    "value": "example@gmail.com",
-                    "type": "string"
-                }
-            ]
-        }
-    */
 };
 
 const askArgument = async (arg, prefixTitle, vscode) => {
@@ -138,13 +60,20 @@ const askSelectionArgument = async (arg, prefixTitle, vscode) => {
 };
 
 const askInfiniteArgument = async (arg, prefixTitle, vscode) => {
-    const nfiniteArgs = [];
+    const infiniteArgs = [];
 
     let index = 0;
     while (true) {
         // Ask for the arguments
         const args = await askArguments(arg.subargs, `${prefixTitle}.${arg.name}[${index}]`, vscode);
-        nfiniteArgs.push(args);
+
+        // Cancelled
+        if (!args) {
+            return;
+        }
+
+        // Add the arguments
+        infiniteArgs.push(args);
 
         // Ask if the user wants to add another argument
         const addAnother = await vscode.window.showQuickPick(["Yes", "No"], {
@@ -159,7 +88,7 @@ const askInfiniteArgument = async (arg, prefixTitle, vscode) => {
         index++;
     }
 
-    return nfiniteArgs;
+    return infiniteArgs;
 };
 
 module.exports = { askArguments };

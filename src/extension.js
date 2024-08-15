@@ -3,6 +3,7 @@ const vscode = require("vscode");
 const fs = require("fs");
 const path = require("path");
 const { askArguments } = require("./utils/arg");
+const { validateSnippets } = require("./utils/validators");
 
 /* ********** PATH ********** */
 let configPath = "";
@@ -16,161 +17,15 @@ const loadSnippets = () => {
     // File has not been updated
     if (clientSnippets && lastConfigUpdate && stats.mtime <= lastConfigUpdate) return clientSnippets;
 
-    // Update the last modified time
-    lastConfigUpdate = stats.mtime;
-
     // Reload the snippets
     delete require.cache[require.resolve(configPath)];
     clientSnippets = require(configPath).snippets;
 
-    // Check snippets
-    const checkSnippets = () => {
-        // Snippets variable is not defined
-        if (!clientSnippets) {
-            throw new Error("snippets variable is not defined");
-        }
+    // Validate the config
+    validateSnippets(clientSnippets);
 
-        // Snippets variable is not an array
-        if (!Array.isArray(clientSnippets)) {
-            throw new Error("snippets variable must be an array");
-        }
-
-        clientSnippets.forEach((snippet, iSnippet) => {
-            // Snippet is not an object
-            if (typeof snippet !== "object") {
-                throw new Error(`snippet[${iSnippet}] must be an object`);
-            }
-
-            // Snippet.name is missing
-            if (!snippet.name) {
-                throw new Error(`snippet[${iSnippet}].name is missing`);
-            }
-
-            // Snippet.name is not a string
-            if (typeof snippet.name !== "string") {
-                throw new Error(`snippet['${snippet.name}'].name must be of type (string)`);
-            }
-
-            // Snippet.name is missing
-            if (snippet.name.trim().length === 0) {
-                throw new Error(`snippet[${iSnippet}].name is missing`);
-            }
-
-            // Snippet.transform is missing
-            if (!snippet.transform) {
-                throw new Error(`snippet['${snippet.name}'].transform is missing`);
-            }
-
-            // Snippet.transform is not a function
-            if (typeof snippet.transform !== "function") {
-                throw new Error(`snippet['${snippet.name}'].transform must be of type (function)`);
-            }
-
-            // Snippet.regex? is not a RegExp
-            if (snippet.regex && !(snippet.regex instanceof RegExp)) {
-                throw new Error(
-                    `snippet['${snippet.name}'].regex must be of type (RegExp | undefined = undefined --> global)`
-                );
-            }
-
-            // Snippet.active? is not a boolean
-            if (snippet.active && typeof snippet.active !== "boolean") {
-                throw new Error(`snippet['${snippet.name}'].active must be of type (boolean | undefined = true)`);
-            }
-
-            // Check args
-            if (snippet.args) {
-                // Snippet.args is not an array
-                if (!Array.isArray(snippet.args)) {
-                    throw new Error(`snippet['${snippet.name}'].args must be an array`);
-                }
-
-                snippet.args.forEach((arg, iArgs) => {
-                    // Snippet.arg is not an object
-                    if (typeof arg !== "object") {
-                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}] must be an object`);
-                    }
-
-                    // Snippet.arg.name is missing
-                    if (!arg.name) {
-                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}].name is missing`);
-                    }
-
-                    // Snippet.arg.name is missing
-                    if (typeof arg.name !== "string") {
-                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}].name must be of type (string)`);
-                    }
-
-                    // Snippet.arg.name is missing
-                    if (arg.name.trim().length === 0) {
-                        throw new Error(`snippet['${snippet.name}'].args[${iArgs}].name is missing`);
-                    }
-
-                    // Check selection
-                    if (arg.selection) {
-                        // Snippet.arg.selection is not an object
-                        if (typeof arg.selection !== "object") {
-                            throw new Error(`snippet['${snippet.name}'].args[${arg.name}].selection must be an object`);
-                        }
-
-                        // Can pick many is not a boolean
-                        if (arg.selection.canPickMany !== undefined && typeof arg.selection.canPickMany !== "boolean") {
-                            throw new Error(
-                                `snippet['${snippet.name}'].args[${arg.name}].selection.canPickMany must be of type (boolean | undefined = false)`
-                            );
-                        }
-
-                        // Snippet.arg.selection.options is missing
-                        if (!arg.selection.options) {
-                            throw new Error(
-                                `snippet['${snippet.name}'].args[${arg.name}].selection.options is missing`
-                            );
-                        }
-
-                        // Snippet.arg.selection.options is not an array
-                        if (!Array.isArray(arg.selection.options)) {
-                            throw new Error(
-                                `snippet['${snippet.name}'].args[${arg.name}].selection.options must be an array`
-                            );
-                        }
-
-                        // Check options
-                        arg.selection.options.forEach((option, iOption) => {
-                            // Snippet.arg.selection.option is not a tuple
-                            if (!Array.isArray(option) || option.length !== 2) {
-                                throw new Error(
-                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}] must be a tuple of 2 elements`
-                                );
-                            }
-
-                            // Lable missing
-                            if (!option[0]) {
-                                throw new Error(
-                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}][0 --> label] is missing`
-                                );
-                            }
-
-                            // Label not a string
-                            if (typeof option[0] !== "string") {
-                                throw new Error(
-                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}][0 --> label] must be of type (string)`
-                                );
-                            }
-
-                            // Lable missing
-                            if (option[0].trim().length === 0) {
-                                throw new Error(
-                                    `snippet['${snippet.name}'].args[${arg.name}].selection.options[${iOption}][0 --> label] is missing`
-                                );
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    };
-
-    checkSnippets();
+    // Update the last modified time
+    lastConfigUpdate = stats.mtime;
 
     return clientSnippets;
 };
@@ -239,6 +94,12 @@ const insert = vscode.commands.registerCommand("snippetpulse.insert", async () =
 
         // Ask for arguments
         const args = await askArguments(snippet.args, "args", vscode);
+
+        // Cancelled
+        if (!args) {
+            vscode.window.showInformationMessage("Snippet insertion cancelled.");
+            return;
+        }
 
         // Generate snippet body using the collected arguments
         const body = snippet.transform(args);

@@ -1,6 +1,7 @@
 const snippets = [
     {
         name: "data-format",
+        regex: /((\.json)$)|((\.xml)$)/,
         args: [
             {
                 name: "typeFiles",

@@ -194,3 +194,7 @@ The SnippetPulse insertion can be accessed through the following command:
     "title": "SnippetPulse > INSERT"
 }
 ```
+
+### Example
+
+The following video shows how to insert a snippet using the configuration defined above:
