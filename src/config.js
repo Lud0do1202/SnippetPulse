@@ -1,6 +1,58 @@
 const snippets = [
     {
         name: "data-format",
+        args: [
+            {
+                name: "typeFiles",
+                type: "selection",
+                selection: {
+                    options: [
+                        ["JSON", { type: "json", minimal: false }],
+                        ["Minimal JSON", { type: "json", minimal: true }],
+                        ["XML", { type: "xml", minimal: false }],
+                        ["Minimal XML", { type: "xml", minimal: true }],
+                    ],
+                    canPickMany: true,
+                },
+                placeholder: "JSON",
+                prompt: "Select the type of files you want to generate",
+            },
+            {
+                name: "root",
+                type: "input",
+                prompt: "Enter the root element name",
+                placeholder: "data",
+            },
+            {
+                name: "attributes",
+                type: "infinite",
+                subargs: [
+                    {
+                        name: "attribute",
+                        type: "input",
+                        prompt: "Enter the attribute name",
+                    },
+                    {
+                        name: "value",
+                        type: "input",
+                        prompt: "Enter the attribute value",
+                    },
+                    {
+                        name: "type",
+                        type: "selection",
+                        selection: {
+                            options: [
+                                ["String", "string"],
+                                ["Number", "number"],
+                                ["Array", "array"],
+                            ],
+                            canPickMany: false,
+                        },
+                        prompt: "Type of the attribute",
+                    },
+                ],
+            },
+        ],
         transform: ({ typeFiles, root, attributes }) => {
             // Convert attributes to a JSON string (minified or not)
             const toJsonString = (attrs, minimal) => {
@@ -43,67 +95,14 @@ const snippets = [
             // Generate the body for each type of file
             let body = [];
             for (const typeFile of typeFiles) {
-                if (typeFile.type === "json") {
-                    const jsonBody = toJsonString(attributes, typeFile.minimal);
-                    body.push(jsonBody, "");
-                } else if (typeFile.type === "xml") {
-                    const xmlBody = toXmlString(attributes, typeFile.minimal);
-                    body.push(xmlBody, "");
-                }
+                const dataBody =
+                    typeFile.type === "json"
+                        ? toJsonString(attributes, typeFile.minimal)
+                        : toXmlString(attributes, typeFile.minimal);
+                body.push(dataBody);
             }
             return body;
         },
-        args: [
-            {
-                name: "typeFiles",
-                type: "selection",
-                selection: {
-                    options: [
-                        ["JSON", { type: "json", minimal: false }],
-                        ["Minimal JSON", { type: "json", minimal: true }],
-                        ["XML", { type: "xml", minimal: false }],
-                        ["Minimal XML", { type: "xml", minimal: true }],
-                    ],
-                    canPickMany: true,
-                },
-                prompt: "Select the type of files you want to generate",
-            },
-            {
-                name: "root",
-                type: "input",
-                prompt: "Enter the root element name",
-                placeholder: "data",
-            },
-            {
-                name: "attributes",
-                type: "infinte",
-                subargs: [
-                    {
-                        name: "attribute",
-                        type: "input",
-                        prompt: "Enter the attribute name",
-                    },
-                    {
-                        name: "value",
-                        type: "input",
-                        prompt: "Enter the attribute value",
-                    },
-                    {
-                        name: "type",
-                        type: "selection",
-                        selection: {
-                            options: [
-                                ["String", "string"],
-                                ["Number", "number"],
-                                ["Array", "array"],
-                            ],
-                            canPickMany: false,
-                        },
-                        prompt: "Type of the attribute",
-                    },
-                ],
-            },
-        ],
     },
 ];
 

@@ -37,7 +37,7 @@ const askArguments = async (args, prefixTitle, vscode) => {
                     },
                     {
                         name: "attributes",
-                        type: "infinte",
+                        type: "infinite",
                         subargs: [
                             {
                                 name: "attribute",
@@ -98,8 +98,8 @@ const askArgument = async (arg, prefixTitle, vscode) => {
             return askInputArguement(arg, prefixTitle, vscode);
         case "selection":
             return askSelectionArgument(arg, prefixTitle, vscode);
-        case "infinte":
-            return askInfinteArgument(arg, prefixTitle, vscode);
+        case "infinite":
+            return askInfiniteArgument(arg, prefixTitle, vscode);
     }
 };
 
@@ -137,14 +137,14 @@ const askSelectionArgument = async (arg, prefixTitle, vscode) => {
     return arg.selection.canPickMany ? values : values[0];
 };
 
-const askInfinteArgument = async (arg, prefixTitle, vscode) => {
-    const infinteArgs = [];
+const askInfiniteArgument = async (arg, prefixTitle, vscode) => {
+    const nfiniteArgs = [];
 
     let index = 0;
     while (true) {
         // Ask for the arguments
         const args = await askArguments(arg.subargs, `${prefixTitle}.${arg.name}[${index}]`, vscode);
-        infinteArgs.push(args);
+        nfiniteArgs.push(args);
 
         // Ask if the user wants to add another argument
         const addAnother = await vscode.window.showQuickPick(["Yes", "No"], {
@@ -159,7 +159,7 @@ const askInfinteArgument = async (arg, prefixTitle, vscode) => {
         index++;
     }
 
-    return infinteArgs;
+    return nfiniteArgs;
 };
 
 module.exports = { askArguments };

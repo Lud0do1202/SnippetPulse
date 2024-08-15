@@ -263,7 +263,7 @@ function activate(context) {
     context.subscriptions.push(config, insert);
 }
 
-// This method is called when your extension is deactivated
+/* ********** DESACTIVATE ********** */
 function deactivate() {}
 
 module.exports = {

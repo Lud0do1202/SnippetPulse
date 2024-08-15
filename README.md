@@ -2,15 +2,15 @@
 
 Stay in sync with the pulse of your code snippets and enhance productivity
 
-## Desciption
+# Description
 
 **_SnippetPulse_** is a powerful tool designed to simplify the creation and insertion of code **snippets** by defining them through **JavaScript functions**.
 
 It allows you to define snippets with **customizable arguments**, transforming them dynamically based on user input, and integrating them seamlessly into your workflow.
 
-## Commands
+# Commands
 
-### Config
+## Config
 
 The SnippetPulse configuration can be accessed through the following command:
 
@@ -21,104 +21,170 @@ The SnippetPulse configuration can be accessed through the following command:
 }
 ```
 
-#### Schema
+### Schema
 
 ```ts
-const snippets = [
-    {
-        name: string;
-        args: {
-            name: string;
-            placeholder?: string;
-            prompt?: string;
-            selection?: {
-                options: [string, any][];
-                canPickMany: boolean = false;
-            }
-        }[] = [];
-        transform: (...args: any) => string[];
-        regex: RegExp = global_snippet;
-        active: boolean = true;
-    }
-];
+/* ***** SNIPPET TYPE ***** */
+type Snippet = {
+    // Name displayed in the snippet suggestions list (required)
+    name: string;
+
+    // Definition of all the arguments required for the snippet (default: [])
+    args: Arg[];
+
+    // Function that will return the final snippet. Each element of the returned array will be inserted as a line (required)
+    transform: (args: any) => string[];
+
+    // Regular expression that will check if the absolute path of the file selected by the user matches the pattern (default: the snippet is available globally)
+    regex: RegExp;
+
+    // Determines whether the snippet is available for use (default: true)
+    active: boolean;
+};
+
+/* ***** ARG TYPE ***** */
+type Arg = {
+    // Identifier of the argument (required)
+    // Used to reference the argument in the transform function
+    name: string;
+
+    // Type of the argument (required)
+    type: "input" | "selection" | "infinite";
+
+    // Placeholder (optional for type: "input" | "selection" otherwise useless)
+    placeholder: string;
+
+    // Prompt message to help the user understand what input is required (optional for type: "input" | "selection" otherwise useless)
+    prompt: string;
+
+    // Selection options for the argument (required for type: "selection" otherwise useless)
+    selection: {
+        // Possible options that a user can select with the label first and the value (required)
+        options: [string, any][];
+
+        // Determines whether the user can select multiple options or just one (default: false)
+        canPickMany: boolean;
+    };
+
+    // Subarguments for the infinite argument (required for type: "infinite" otherwise useless)
+    subargs: Arg[];
+};
 ```
 
-| Name                           | Type                | Default              | Explanation                                                                                                                                                        |
-| ------------------------------ | ------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **name**                       | string              | _required_           | The name displayed in the snippet suggestions list.                                                                                                                |
-| **args**                       | array[]             | [ ]                  | The definition of all the arguments required for the snippet.                                                                                                      |
-| **args.name**                  | string              | _required_           | The name displayed as the title of the argument input field.                                                                                                       |
-| **args.placeholder**           | string \| undefined | undefined            | The placeholder providing a hint or example of the expected input.                                                                                                 |
-| **args.prompt**                | string \| undefined | undefined            | The message displayed to help the user understand what input is required.                                                                                          |
-| **args.selection**             | object \| undefined | undefined            | If the argument involves selecting from a list of predefined options, this object specifies those choices.                                                         |
-| **args.selection.options**     | [string, any][]     | required             | The possible options that a user can select with the lable first and the value                                                                                     |
-| **args.selection.canPickMany** | boolean             | false                | Determines whether the user can select multiple options or just one.                                                                                               |
-| **transform**                  | function            | _required_           | The function that will return the final snippet. Each element of the returned array will be inserted as a line.                                                    |
-| **regex**                      | RegExp \| undefined | undefined --> global | A regular expression that will check if the absolute path of the file selected by the user matches the pattern. If it does, the snippet will be available for use. |
-| **active**                     | boolean             | true                 | A boolean that determines whether the snippet is available for use.                                                                                                |
+### Example
 
-#### Example
+With this configuration, you can define a snippet that generates JSON and XML files based on user input:
 
 ```js
 const snippets = [
-    // Global snippet that replaces all separators in a text with one of the options
     {
-        name: "replace-separators",
+        name: "data-format",
         args: [
             {
-                name: "Text",
-                placeholder: "word1 word2-word3.word4_word5",
-                prompt: "Enter the text (separators= . _-)",
-            },
-            {
-                name: "Separator",
-                prompt: "Select the separator you want to use",
+                name: "typeFiles",
+                type: "selection",
                 selection: {
                     options: [
-                        ["underscore (_)", "_"],
-                        ["dash (-)", "-"],
-                        ["dot (.)", "."],
-                        ["empty space ( )", " "],
-                    ],
-                    canPickMany: false,
-                },
-            },
-        ],
-        transform: (text, separator) => [text.replace(/[\\. _-]/g, separator)],
-    },
-
-    // Initialize a JSON file from the /dev folder with several available options.
-    {
-        name: "json-init",
-        args: [
-            {
-                name: "Options",
-                prompt: "Select the options you want to include",
-                selection: {
-                    options: [
-                        ["Name", ["name", "John Doe"]],
-                        ["Age", ["age", 30]],
-                        ["Email", ["email", "john.doe@gmail.com"]],
+                        ["JSON", { type: "json", minimal: false }],
+                        ["Minimal JSON", { type: "json", minimal: true }],
+                        ["XML", { type: "xml", minimal: false }],
+                        ["Minimal XML", { type: "xml", minimal: true }],
                     ],
                     canPickMany: true,
                 },
+                prompt: "Select the type of files you want to generate",
+            },
+            {
+                name: "root",
+                type: "input",
+                prompt: "Enter the root element name",
+                placeholder: "data",
+            },
+            {
+                name: "attributes",
+                type: "infinite",
+                subargs: [
+                    {
+                        name: "attribute",
+                        type: "input",
+                        prompt: "Enter the attribute name",
+                    },
+                    {
+                        name: "value",
+                        type: "input",
+                        prompt: "Enter the attribute value",
+                    },
+                    {
+                        name: "type",
+                        type: "selection",
+                        selection: {
+                            options: [
+                                ["String", "string"],
+                                ["Number", "number"],
+                                ["Array", "array"],
+                            ],
+                            canPickMany: false,
+                        },
+                        prompt: "Type of the attribute",
+                    },
+                ],
             },
         ],
-        transform: (options) => {
+        transform: ({ typeFiles, root, attributes }) => {
+            // Convert attributes to a JSON string (minified or not)
+            const toJsonString = (attrs, minimal) => {
+                let data = { [root]: {} };
+
+                for (const attr of attrs) {
+                    data[root][attr.attribute] =
+                        attr.type === "number"
+                            ? Number(attr.value)
+                            : attr.type === "array"
+                            ? attr.value.trim().split(",")
+                            : attr.value;
+                }
+
+                return JSON.stringify(data, null, minimal ? 0 : 2);
+            };
+
+            // Convert attributes to an XML string (minified or not)
+            const toXmlString = (attrs, minimal) => {
+                const nextLine = minimal ? "" : "\n";
+                const nextLineAndTab = minimal ? "" : "\n\t";
+
+                let data = `<${root}>`;
+                for (const attribute of attrs) {
+                    if (attribute.type === "array") {
+                        const values = attribute.value.trim().split(",");
+                        for (const value of values) {
+                            data += `${nextLineAndTab}<${attribute.attribute}>${value}</${attribute.attribute}>`;
+                        }
+                    } else {
+                        data += `${nextLineAndTab}<${attribute.attribute}>${
+                            attribute.type === "number" ? Number(attribute.value) : attribute.value
+                        }</${attribute.attribute}>`;
+                    }
+                }
+                data += `${nextLine}</${root}>`;
+                return data;
+            };
+
+            // Generate the body for each type of file
             let body = [];
-            body.push("{");
-            options.forEach((option) => {
-                body.push(`    "${option[0]}": "${option[1]}",`);
-            });
-            body.push("}");
+            for (const typeFile of typeFiles) {
+                const dataBody =
+                    typeFile.type === "json"
+                        ? toJsonString(attributes, typeFile.minimal)
+                        : toXmlString(attributes, typeFile.minimal);
+                body.push(dataBody);
+            }
             return body;
         },
-        regex: /\/dev\/.*(\.json)$/,
     },
 ];
 ```
 
-### Insert
+## Insert
 
 The SnippetPulse insertion can be accessed through the following command:
 
