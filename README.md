@@ -200,7 +200,7 @@ The SnippetPulse insertion can be accessed through the following command:
 
 The following video shows how to insert a snippet using the configuration defined above:
 
-![SnippetPulse-InsertExample](https://github.com/Lud0do1202/SnippetPulse/tree/master/media/SnippetPulse-InsertExample.gif)
+[![Snippet Pulse - Insert](https://img.youtube.com/vi/SMMQJNqJzyQ/0.jpg)](https://www.youtube.com/watch?v=SMMQJNqJzyQ)
 
 ## Other Examples
 

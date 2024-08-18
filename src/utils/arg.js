@@ -67,7 +67,7 @@ const askInfiniteArgument = async (arg, prefixTitle, vscode) => {
         // Ask if the user wants to add another argument
         const addAnother = await vscode.window.showQuickPick(["Yes", "No"], {
             title: `${prefixTitle}.${arg.name}`,
-            placeHolder: `Add a new argument for this infinite argument?`,
+            placeHolder: "Add a new element?",
         });
 
         if (addAnother === "No") {
